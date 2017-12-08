@@ -1,8 +1,8 @@
-# xstring
+# xcompress
 
-xcore cross platform string library
+xcore cross platform compression library
 
-There are 2 classes of strings, one is pure ASCII and the other one has UTF-32 as the underlying encoding.
+There is currently only 1 compressor:
 
-namespace ascii::xstring
-namespace utf32::xstring
+* LZ4 (www.lz4.org)
+
