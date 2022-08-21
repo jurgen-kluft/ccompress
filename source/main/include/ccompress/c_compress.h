@@ -1,15 +1,13 @@
-// x_compressor.h - Core Compression API - 
-#ifndef __XCOMPRESS_COMPRESSOR_INTERFACE_H__
-#define __XCOMPRESS_COMPRESSOR_INTERFACE_H__
-#include "xbase/x_target.h"
+#ifndef __CCOMPRESS_COMPRESSOR_INTERFACE_H__
+#define __CCOMPRESS_COMPRESSOR_INTERFACE_H__
+#include "cbase/c_target.h"
 #ifdef USE_PRAGMA_ONCE
 #pragma once
 #endif
 
-
-namespace xcore
+namespace ncore
 {
-	class xcompressor
+	class compressor_t
 	{
 	public:
 		virtual void		reset() = 0;
@@ -18,4 +16,4 @@ namespace xcore
 	};
 }
 
-#endif	///< __XCOMPRESS_COMPRESSOR_INTERFACE_H__
+#endif	///< __CCOMPRESS_COMPRESSOR_INTERFACE_H__
