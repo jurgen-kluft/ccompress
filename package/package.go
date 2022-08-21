@@ -1,34 +1,34 @@
-package xcompress
+package ccompress
 
 import (
-	"github.com/jurgen-kluft/xbase/package"
-	"github.com/jurgen-kluft/xcode/denv"
-	"github.com/jurgen-kluft/xentry/package"
-	"github.com/jurgen-kluft/xunittest/package"
+	cbase "github.com/jurgen-kluft/cbase/package"
+	"github.com/jurgen-kluft/ccode/denv"
+	centry "github.com/jurgen-kluft/centry/package"
+	cunittest "github.com/jurgen-kluft/cunittest/package"
 )
 
-// GetPackage returns the package object of 'xcompress'
+// GetPackage returns the package object of 'ccompress'
 func GetPackage() *denv.Package {
 	// Dependencies
-	unittestpkg := xunittest.GetPackage()
-	entrypkg := xentry.GetPackage()
-	xbasepkg := xbase.GetPackage()
+	unittestpkg := cunittest.GetPackage()
+	entrypkg := centry.GetPackage()
+	basepkg := cbase.GetPackage()
 
-	// The main (xcompress) package
-	mainpkg := denv.NewPackage("xcompress")
+	// The main (ccompress) package
+	mainpkg := denv.NewPackage("ccompress")
 	mainpkg.AddPackage(unittestpkg)
 	mainpkg.AddPackage(entrypkg)
-	mainpkg.AddPackage(xbasepkg)
+	mainpkg.AddPackage(basepkg)
 
-	// 'xcompress' library
-	mainlib := denv.SetupDefaultCppLibProject("xcompress", "github.com\\jurgen-kluft\\xcompress")
-	mainlib.Dependencies = append(mainlib.Dependencies, xbasepkg.GetMainLib())
+	// 'ccompress' library
+	mainlib := denv.SetupDefaultCppLibProject("ccompress", "github.com\\jurgen-kluft\\ccompress")
+	mainlib.Dependencies = append(mainlib.Dependencies, basepkg.GetMainLib())
 
-	// 'xcompress' unittest project
-	maintest := denv.SetupDefaultCppTestProject("xcompress_test", "github.com\\jurgen-kluft\\xcompress")
+	// 'ccompress' unittest project
+	maintest := denv.SetupDefaultCppTestProject("ccompress_test", "github.com\\jurgen-kluft\\ccompress")
 	maintest.Dependencies = append(maintest.Dependencies, unittestpkg.GetMainLib())
 	maintest.Dependencies = append(maintest.Dependencies, entrypkg.GetMainLib())
-	maintest.Dependencies = append(maintest.Dependencies, xbasepkg.GetMainLib())
+	maintest.Dependencies = append(maintest.Dependencies, basepkg.GetMainLib())
 	maintest.Dependencies = append(maintest.Dependencies, mainlib)
 
 	mainpkg.AddMainLib(mainlib)
