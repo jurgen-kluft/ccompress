@@ -1,8 +1,8 @@
-# xcompress
+# ccompress
 
-xcore cross platform compression library
+cross platform compression library
 
-There is currently only 1 compressor:
+There is currently only 1 candidate:
 
 * LZ4 (www.lz4.org)
 
