@@ -1,10 +1,10 @@
-#include "xbase/x_base.h"
-#include "xbase/x_allocator.h"
-#include "xbase/x_console.h"
+#include "cbase/c_base.h"
+#include "cbase/c_allocator.h"
+#include "cbase/c_console.h"
 
-#include "xcore/x_core.h"
+#include "ncore/x_core.h"
 
-#include "xunittest\xunittest.h"
+#include "cunittest\cunittest.h"
 
 UNITTEST_SUITE_LIST(xCoreUnitTest);
 
@@ -19,7 +19,7 @@ UNITTEST_SUITE_DECLARE(xCoreUnitTest, xset);
 UNITTEST_SUITE_DECLARE(xCoreUnitTest, xtree);
 UNITTEST_SUITE_DECLARE(xCoreUnitTest, xvector);
 
-namespace xcore
+namespace ncore
 {
 	class UnitTestAllocator : public UnitTest::Allocator
 	{
@@ -36,7 +36,7 @@ namespace xcore
 	public:
 							TestAllocator(x_iallocator* allocator) : mAllocator(allocator) { }
 
-		virtual const char*	name() const										{ return "xcore unittest test heap allocator"; }
+		virtual const char*	name() const										{ return "ncore unittest test heap allocator"; }
 
 		virtual void*		allocate(xsize_t size, u32 alignment)
 		{
@@ -66,29 +66,29 @@ namespace xcore
 	};
 }
 
-xcore::x_iallocator* gTestAllocator = NULL;
+ncore::x_iallocator* gTestAllocator = NULL;
 
 bool gRunUnitTest(UnitTest::TestReporter& reporter)
 {
-	xbase::x_Init();
+	cbase::init();
 
-	xcore::UnitTestAllocator unittestAllocator( xcore::x_iallocator::get_default() );
+	ncore::UnitTestAllocator unittestAllocator( ncore::x_iallocator::get_default() );
 	UnitTest::SetAllocator(&unittestAllocator);
 
-	xcore::xconsole::add_default_console();
+	ncore::xconsole::add_default_console();
 
-	xcore::TestAllocator testAllocator(xcore::x_iallocator::get_default());
+	ncore::TestAllocator testAllocator(ncore::x_iallocator::get_default());
 	gTestAllocator = &testAllocator;
 
-	xcore::x_Init(gTestAllocator);
+	ncore::x_Init(gTestAllocator);
 	int r = UNITTEST_SUITE_RUN(reporter, xCoreUnitTest);
-	xcore::x_Exit();
+	ncore::x_Exit();
 
 	gTestAllocator->release();
 
 	UnitTest::SetAllocator(NULL);
 
-	xbase::x_Exit();
+	cbase::exit();
 	return r==0;
 }
 
