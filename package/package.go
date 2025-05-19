@@ -18,13 +18,13 @@ func GetPackage() *denv.Package {
 	mainpkg.AddPackage(basepkg)
 
 	// 'ccompress' library
-	mainlib := denv.SetupDefaultCppLibProject("ccompress", "github.com\\jurgen-kluft\\ccompress")
-	mainlib.Dependencies = append(mainlib.Dependencies, basepkg.GetMainLib())
+	mainlib := denv.SetupCppLibProject("ccompress", "github.com\\jurgen-kluft\\ccompress")
+	mainlib.AddDependencies(basepkg.GetMainLib()...)
 
 	// 'ccompress' unittest project
 	maintest := denv.SetupDefaultCppTestProject("ccompress_test", "github.com\\jurgen-kluft\\ccompress")
-	maintest.Dependencies = append(maintest.Dependencies, unittestpkg.GetMainLib())
-	maintest.Dependencies = append(maintest.Dependencies, basepkg.GetMainLib())
+	maintest.AddDependencies(unittestpkg.GetMainLib()...)
+	maintest.AddDependencies(basepkg.GetMainLib()...)
 	maintest.Dependencies = append(maintest.Dependencies, mainlib)
 
 	mainpkg.AddMainLib(mainlib)
