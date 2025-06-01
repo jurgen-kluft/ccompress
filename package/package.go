@@ -13,19 +13,19 @@ func GetPackage() *denv.Package {
 	basepkg := cbase.GetPackage()
 
 	// The main (ccompress) package
-	mainpkg := denv.NewPackage("ccompress")
+	mainpkg := denv.NewPackage("github.com\\jurgen-kluft", "ccompress")
 	mainpkg.AddPackage(unittestpkg)
 	mainpkg.AddPackage(basepkg)
 
 	// 'ccompress' library
-	mainlib := denv.SetupCppLibProject("ccompress", "github.com\\jurgen-kluft\\ccompress")
+	mainlib := denv.SetupCppLibProject(mainpkg, "ccompress")
 	mainlib.AddDependencies(basepkg.GetMainLib()...)
 
 	// 'ccompress' unittest project
-	maintest := denv.SetupDefaultCppTestProject("ccompress_test", "github.com\\jurgen-kluft\\ccompress")
+	maintest := denv.SetupCppTestProject(mainpkg, "ccompress_test")
 	maintest.AddDependencies(unittestpkg.GetMainLib()...)
 	maintest.AddDependencies(basepkg.GetMainLib()...)
-	maintest.Dependencies = append(maintest.Dependencies, mainlib)
+	maintest.AddDependency(mainlib)
 
 	mainpkg.AddMainLib(mainlib)
 	mainpkg.AddUnittest(maintest)
