@@ -19,23 +19,23 @@ namespace ncore
             type_max
         };
 
-        struct cctxt_t;
-        cctxt_t* create_cctxt(alloc_t *alloc, etype type, u32 threads, u32 level, u32 inputsize);
-        void free(cctxt_t *ctx);
-        void reset(cctxt_t *ctx);
-        void compress(cctxt_t *ctx, u8 const *src, u8 const *src_end, u8 *dst, u8 *&dst_end, u8 *dst_eos);
-        int_t stats_get_frames(cctxt_t * ctx);
-        int_t stats_get_insize(cctxt_t * ctx);
-        int_t stats_get_outsize(cctxt_t * ctx);
+        struct compress_t;
+        compress_t* create_cctxt(alloc_t *alloc, etype type, u32 threads, u32 level, u32 inputsize);
+        void free(compress_t *ctx);
+        void reset(compress_t *ctx);
+        void compress(compress_t *ctx, u8 const *src, u8 const *src_end, u8 *dst, u8 *&dst_end, u8 *dst_eos);
+        int_t stats_get_frames(compress_t * ctx);
+        int_t stats_get_insize(compress_t * ctx);
+        int_t stats_get_outsize(compress_t * ctx);
 
-        struct dctxt_t;
-        dctxt_t* create_dctxt(alloc_t *alloc, etype type, u32 threads, u32 level, u32 inputsize);
-        void free(dctxt_t *ctx);
-        void reset(dctxt_t *ctx);
-        void decompress(dctxt_t *ctx, u8 const *src, u8 const *src_end, u8 *dst, u8 *&dst_end, u8 *dst_eos);
-        int_t stats_get_frames(dctxt_t * ctx);
-        int_t stats_get_insize(dctxt_t * ctx);
-        int_t stats_get_outsize(dctxt_t * ctx);
+        struct decompress_t;
+        decompress_t* create_dctxt(alloc_t *alloc, etype type, u32 threads, u32 level, u32 inputsize);
+        void free(decompress_t *ctx);
+        void reset(decompress_t *ctx);
+        void decompress(decompress_t *ctx, u8 const *src, u8 const *src_end, u8 *dst, u8 *&dst_end, u8 *dst_eos);
+        int_t stats_get_frames(decompress_t * ctx);
+        int_t stats_get_insize(decompress_t * ctx);
+        int_t stats_get_outsize(decompress_t * ctx);
     }
 }
 
