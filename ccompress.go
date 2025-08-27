@@ -2,10 +2,13 @@ package main
 
 import (
 	"github.com/jurgen-kluft/ccode"
-	ccompress "github.com/jurgen-kluft/ccompress/package"
+	cpkg "github.com/jurgen-kluft/ccompress/package"
 )
 
 func main() {
-	ccode.Init()
-	ccode.Generate(ccompress.GetPackage())
+	if ccode.Init() {
+		pkg := cpkg.GetPackage()
+		ccode.GenerateFiles(pkg)
+		ccode.Generate(pkg)
+	}
 }
