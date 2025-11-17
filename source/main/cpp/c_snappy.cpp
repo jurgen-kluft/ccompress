@@ -27,23 +27,24 @@ namespace ncore
         // Only needed for compression (preallocates the worst case)
         struct env_t
         {
-            u16  *hash_table;
-            void *scratch;
-            void *scratch_output;
+            u16*  hash_table;
+            void* scratch;
+            void* scratch_output;
         };
 
         struct iovec_t;
 
-        int  init_env(env_t *env);
-        int  init_env_sg(env_t *env, bool sg);
-        void free_env(env_t *env);
+        int  init_env(env_t* env);
+        int  init_env_sg(env_t* env, bool sg);
+        void free_env(env_t* env);
 
-        int compress(env_t *env, const char *input, size_t input_length, char *compressed, size_t *compressed_length);
-        int uncompress(const char *compressed, size_t n, char *uncompressed);
-        int compress_iov(env_t *env, iovec_t *iov_in, int iov_in_len, size_t input_length, iovec_t *iov_out, int *iov_out_len, size_t *compressed_length);
-        int uncompress_iov(iovec_t *iov_in, int iov_in_len, size_t input_len, char *uncompressed);
-
-        bool   uncompressed_length(const char *buf, size_t len, size_t *result);
+        int compress(env_t* env, const char* input, size_t input_length, char* compressed, size_t* compressed_length);
+        int uncompress(const char* compressed, size_t n, char* uncompressed);
+#ifdef SG
+        int compress_iov(env_t* env, iovec_t* iov_in, int iov_in_len, size_t input_length, iovec_t* iov_out, int* iov_out_len, size_t* compressed_length);
+        int uncompress_iov(iovec_t* iov_in, int iov_in_len, size_t input_len, char* uncompressed);
+#endif
+        bool   uncompressed_length(const char* buf, size_t len, size_t* result);
         size_t max_compressed_length(size_t source_len);
 
 #define likely(x)   __builtin_expect(x, 1)
@@ -59,30 +60,30 @@ namespace ncore
 #define CHECK_LT(a, b) CRASH_UNLESS((a) < (b))
 #define CHECK_GT(a, b) CRASH_UNLESS((a) > (b))
 
-        static inline void unaligned_store32(void *ptr, u32 value) { *(u32 *)(ptr) = value; }
-        static inline u32  unaligned_load32(const void *ptr) { return *(const u32 *)(ptr); }
+        static inline void unaligned_store32(void* ptr, u32 value) { *(u32*)(ptr) = value; }
+        static inline u32  unaligned_load32(const void* ptr) { return *(const u32*)(ptr); }
 
-        static inline void unaligned_store64(void *ptr, u64 value)
+        static inline void unaligned_store64(void* ptr, u64 value)
         {
-            if (sizeof(void *) == 8)
+            if (sizeof(void*) == 8)
             {
-                *(u64 *)(ptr) = value;
+                *(u64*)(ptr) = value;
             }
             else
             {
-                char *p         = (char *)(ptr);
-                *(u32 *)(p)     = (u32)(value);
-                *(u32 *)(p + 4) = (u32)(value >> 32);
+                char* p        = (char*)(ptr);
+                *(u32*)(p)     = (u32)(value);
+                *(u32*)(p + 4) = (u32)(value >> 32);
             }
         }
 
-        static inline u64 unaligned_load64(const void *ptr)
+        static inline u64 unaligned_load64(const void* ptr)
         {
 #if CC_PLATFORM_PTR_SIZE == 8
-            return *(const u64 *)(ptr);
+            return *(const u64*)(ptr);
 #else
-            const char *p = (const char *)(ptr);
-            return ((u64)(*(const u32 *)(p)) | ((u64)(*(const u32 *)(p + 4)) << 32));
+            const char* p = (const char*)(ptr);
+            return ((u64)(*(const u32*)(p)) | ((u64)(*(const u32*)(p + 4)) << 32));
 #endif
         }
 
@@ -90,66 +91,66 @@ namespace ncore
          * This can be more efficient than unaligned_load64 + unaligned_store64
          * on some platforms, in particular ARM.
          */
-        static inline void unaligned_copy64(const void *src, void *dst)
+        static inline void unaligned_copy64(const void* src, void* dst)
         {
 #if CC_PLATFORM_PTR_SIZE == 8
             unaligned_store64(dst, unaligned_load64(src));
 #else
-            const char *src_char = (const char *)(src);
-            char       *dst_char = (char *)(dst);
+            const char* src_char = (const char*)(src);
+            char*       dst_char = (char*)(dst);
             unaligned_store32(dst_char, unaligned_load32(src_char));
             unaligned_store32(dst_char + 4, unaligned_load32(src_char + 4));
 #endif
         }
 
-        static void put_unaligned_le16(int offset, char *p)
+        static void put_unaligned_le16(int offset, char* p)
         {
             p[0] = (unsigned char)(offset);
             p[1] = (unsigned char)(offset >> 8);
         }
 
-        static u32 get_unaligned_le32(const char *p) { return (u32)(p[0] | (p[1] << 8) | (p[2] << 16) | (p[3] << 24)); }
+        static u32 get_unaligned_le32(const char* p) { return (u32)(p[0] | (p[1] << 8) | (p[2] << 16) | (p[3] << 24)); }
 
 #ifdef NDEBUG
 
-    #define DCHECK(cond) \
+#    define DCHECK(cond) \
         do               \
         {                \
         } while (0)
-    #define DCHECK_LE(a, b) \
+#    define DCHECK_LE(a, b) \
         do                  \
         {                   \
         } while (0)
-    #define DCHECK_GE(a, b) \
+#    define DCHECK_GE(a, b) \
         do                  \
         {                   \
         } while (0)
-    #define DCHECK_EQ(a, b) \
+#    define DCHECK_EQ(a, b) \
         do                  \
         {                   \
         } while (0)
-    #define DCHECK_NE(a, b) \
+#    define DCHECK_NE(a, b) \
         do                  \
         {                   \
         } while (0)
-    #define DCHECK_LT(a, b) \
+#    define DCHECK_LT(a, b) \
         do                  \
         {                   \
         } while (0)
-    #define DCHECK_GT(a, b) \
+#    define DCHECK_GT(a, b) \
         do                  \
         {                   \
         } while (0)
 
 #else
 
-    #define DCHECK(cond)    CHECK(cond)
-    #define DCHECK_LE(a, b) CHECK_LE(a, b)
-    #define DCHECK_GE(a, b) CHECK_GE(a, b)
-    #define DCHECK_EQ(a, b) CHECK_EQ(a, b)
-    #define DCHECK_NE(a, b) CHECK_NE(a, b)
-    #define DCHECK_LT(a, b) CHECK_LT(a, b)
-    #define DCHECK_GT(a, b) CHECK_GT(a, b)
+#    define DCHECK(cond)    CHECK(cond)
+#    define DCHECK_LE(a, b) CHECK_LE(a, b)
+#    define DCHECK_GE(a, b) CHECK_GE(a, b)
+#    define DCHECK_EQ(a, b) CHECK_EQ(a, b)
+#    define DCHECK_NE(a, b) CHECK_NE(a, b)
+#    define DCHECK_LT(a, b) CHECK_LT(a, b)
+#    define DCHECK_GT(a, b) CHECK_GT(a, b)
 
 #endif
 
@@ -162,9 +163,7 @@ namespace ncore
         }
 
         static inline int log2_floor(u32 n) { return n == 0 ? -1 : 31 ^ __builtin_clz(n); }
-
         static inline int find_lsb_set_non_zero(u32 n) { return __builtin_ctz(n); }
-
         static inline int find_lsb_set_non_zero64(u64 n) { return __builtin_ctzll(n); }
 
 #define kmax32 5
@@ -176,10 +175,10 @@ namespace ncore
          * past the last byte of the varint32. Else returns NULL.  On success,
          * "result <= limit".
          */
-        static inline const char *varint_parse32_with_limit(const char *p, const char *l, u32 *OUTPUT)
+        static inline const char* varint_parse32_with_limit(const char* p, const char* l, u32* OUTPUT)
         {
-            const unsigned char *ptr   = (const unsigned char *)(p);
-            const unsigned char *limit = (const unsigned char *)(l);
+            const unsigned char* ptr   = (const unsigned char*)(p);
+            const unsigned char* limit = (const unsigned char*)(l);
             u32                  b, result;
 
             if (ptr >= limit)
@@ -215,7 +214,7 @@ namespace ncore
             return NULL; /* Value is too long to be a varint32 */
         done:
             *OUTPUT = result;
-            return (const char *)(ptr);
+            return (const char*)(ptr);
         }
 
         /*
@@ -223,10 +222,10 @@ namespace ncore
          *  EFFECTS    Encodes "v" into "ptr" and returns a pointer to the
          *            byte just past the last encoded byte.
          */
-        static inline char *varint_encode32(char *sptr, u32 v)
+        static inline char* varint_encode32(char* sptr, u32 v)
         {
             /* Operate on characters as unsigneds */
-            unsigned char   *ptr = (unsigned char *)(sptr);
+            unsigned char*   ptr = (unsigned char*)(sptr);
             static const int B   = 128;
 
             if (v < (1 << 7))
@@ -259,30 +258,30 @@ namespace ncore
                 *(ptr++) = (v >> 21) | B;
                 *(ptr++) = v >> 28;
             }
-            return (char *)(ptr);
+            return (char*)(ptr);
         }
 
 #ifdef SG
 
-        static inline void *n_bytes_after_addr(void *addr, size_t n_bytes) { return (void *)((char *)addr + n_bytes); }
+        static inline void* n_bytes_after_addr(void* addr, size_t n_bytes) { return (void*)((char*)addr + n_bytes); }
 
         struct source_t
         {
-            iovec *iov;
-            int    iovlen;
-            int    curvec;
-            int    curoff;
-            size_t total;
+            iovec_t* iov;
+            int      iovlen;
+            int      curvec;
+            int      curoff;
+            size_t   total;
         };
 
         /* Only valid at beginning when nothing is consumed */
-        static inline int available(source_t *s) { return s->total; }
+        static inline int available(source_t* s) { return s->total; }
 
-        static inline const char *peek(source_t *s, size_t *len)
+        static inline const char* peek(source_t* s, size_t* len)
         {
             if (likely(s->curvec < s->iovlen))
             {
-                iovec *iv = &s->iov[s->curvec];
+                iovec_t* iv = &s->iov[s->curvec];
                 if (s->curoff < iv->iov_len)
                 {
                     *len = iv->iov_len - s->curoff;
@@ -293,9 +292,9 @@ namespace ncore
             return NULL;
         }
 
-        static inline void skip(source_t *s, size_t n)
+        static inline void skip(source_t* s, size_t n)
         {
-            iovec *iv = &s->iov[s->curvec];
+            iovec_t* iv = &s->iov[s->curvec];
             s->curoff += n;
             DCHECK_LE(s->curoff, iv->iov_len);
             if (s->curoff >= iv->iov_len && s->curvec + 1 < s->iovlen)
@@ -307,18 +306,18 @@ namespace ncore
 
         struct sink_t
         {
-            iovec   *iov;
+            iovec_t* iov;
             int      iovlen;
             unsigned curvec;
             unsigned curoff;
             unsigned written;
         };
 
-        static inline void append(sink_t *s, const char *data, size_t n)
+        static inline void append(sink_t* s, const char* data, size_t n)
         {
-            iovec *iov  = &s->iov[s->curvec];
-            char  *dst  = n_bytes_after_addr(iov->iov_base, s->curoff);
-            size_t nlen = math::g_min(iov->iov_len - s->curoff, n);
+            iovec_t* iov  = &s->iov[s->curvec];
+            char*    dst  = n_bytes_after_addr(iov->iov_base, s->curoff);
+            size_t   nlen = math::g_min(iov->iov_len - s->curoff, n);
             if (data != dst)
                 nmem::memcpy(dst, data, nlen);
             s->written += n;
@@ -335,9 +334,9 @@ namespace ncore
             }
         }
 
-        static inline void *sink_peek(sink_t *s, size_t n)
+        static inline void* sink_peek(sink_t* s, size_t n)
         {
-            iovec *iov = &s->iov[s->curvec];
+            iovec_t* iov = &s->iov[s->curvec];
             if (s->curvec < iov->iov_len && iov->iov_len - s->curoff >= n)
                 return n_bytes_after_addr(iov->iov_base, s->curoff);
             return NULL;
@@ -347,19 +346,19 @@ namespace ncore
 
         struct source_t
         {
-            const char *ptr;
+            const char* ptr;
             size_t      left;
         };
 
-        static inline int available(source_t *s) { return s->left; }
+        static inline int available(source_t* s) { return s->left; }
 
-        static inline const char *peek(source_t *s, size_t *len)
+        static inline const char* peek(source_t* s, size_t* len)
         {
             *len = s->left;
             return s->ptr;
         }
 
-        static inline void skip(source_t *s, size_t n)
+        static inline void skip(source_t* s, size_t n)
         {
             s->left -= n;
             s->ptr += n;
@@ -367,34 +366,34 @@ namespace ncore
 
         struct sink_t
         {
-            char *dest;
+            char* dest;
         };
 
-        static inline void append(sink_t *s, const char *data, size_t n)
+        static inline void append(sink_t* s, const char* data, size_t n)
         {
             if (data != s->dest)
                 nmem::memcpy(s->dest, data, n);
             s->dest += n;
         }
 
-    #define sink_peek(s, n) sink_peek_no_sg(s)
+#    define sink_peek(s, n) sink_peek_no_sg(s)
 
-        static inline void *sink_peek_no_sg(const sink_t *s) { return s->dest; }
+        static inline void* sink_peek_no_sg(const sink_t* s) { return s->dest; }
 
 #endif
 
         struct writer_t
         {
-            char *base;
-            char *op;
-            char *op_limit;
+            char* base;
+            char* op;
+            char* op_limit;
         };
 
         /* Called before decompression */
-        static inline void writer_set_expected_length(writer_t *w, size_t len) { w->op_limit = w->op + len; }
+        static inline void writer_set_expected_length(writer_t* w, size_t len) { w->op_limit = w->op + len; }
 
         /* Called after decompression */
-        static inline bool writer_check_length(writer_t *w) { return w->op == w->op_limit; }
+        static inline bool writer_check_length(writer_t* w) { return w->op == w->op_limit; }
 
         /*
          * Copy "len" bytes from "src" to "op", one byte at a time.  Used for
@@ -409,7 +408,7 @@ namespace ncore
          * Note that this does not match the semantics of either nmem::memcpy()
          * or memmove().
          */
-        static inline void incremental_copy(const char *src, char *op, ssize_t len)
+        static inline void incremental_copy(const char* src, char* op, ssize_t len)
         {
             DCHECK_GT(len, 0);
             do
@@ -453,7 +452,7 @@ namespace ncore
 
 #define kmax_increment_copy_overflow 10
 
-        static inline void incremental_copy_fast_path(const char *src, char *op, ssize_t len)
+        static inline void incremental_copy_fast_path(const char* src, char* op, ssize_t len)
         {
             while (op - src < 8)
             {
@@ -470,9 +469,9 @@ namespace ncore
             }
         }
 
-        static inline bool writer_append_from_self(writer_t *w, u32 offset, u32 len)
+        static inline bool writer_append_from_self(writer_t* w, u32 offset, u32 len)
         {
-            char *const op = w->op;
+            char* const op = w->op;
             CHECK_LE(op, w->op_limit);
             const u32 space_left = w->op_limit - op;
 
@@ -505,9 +504,9 @@ namespace ncore
             return true;
         }
 
-        static inline bool writer_append(writer_t *w, const char *ip, u32 len)
+        static inline bool writer_append(writer_t* w, const char* ip, u32 len)
         {
-            char *const op = w->op;
+            char* const op = w->op;
             CHECK_LE(op, w->op_limit);
             const u32 space_left = w->op_limit - op;
             if (space_left < len)
@@ -517,9 +516,9 @@ namespace ncore
             return true;
         }
 
-        static inline bool writer_try_fast_append(writer_t *w, const char *ip, u32 available_bytes, u32 len)
+        static inline bool writer_try_fast_append(writer_t* w, const char* ip, u32 available_bytes, u32 len)
         {
-            char *const op         = w->op;
+            char* const op         = w->op;
             const int   space_left = w->op_limit - op;
             if (len <= 16 && available_bytes >= 16 && space_left >= 16)
             {
@@ -545,7 +544,7 @@ namespace ncore
             return (bytes * kmul) >> shift;
         }
 
-        static inline u32 hash(const char *p, int shift) { return hash_bytes(unaligned_load32(p), shift); }
+        static inline u32 hash(const char* p, int shift) { return hash_bytes(unaligned_load32(p), shift); }
 
         /*
          * Compressed data can be defined as:
@@ -579,7 +578,7 @@ namespace ncore
             COPY_4_BYTE_OFFSET = 3
         };
 
-        static inline char *emit_literal(char *op, const char *literal, int len, bool allow_fast_path)
+        static inline char* emit_literal(char* op, const char* literal, int len, bool allow_fast_path)
         {
             int n = len - 1; /* Zero-length literals are disallowed */
 
@@ -610,7 +609,7 @@ namespace ncore
             else
             {
                 /* Encode in upcoming bytes */
-                char *base  = op;
+                char* base  = op;
                 int   count = 0;
                 op++;
                 while (n > 0)
@@ -627,7 +626,7 @@ namespace ncore
             return op + len;
         }
 
-        static inline char *emit_copy_less_than64(char *op, int offset, int len)
+        static inline char* emit_copy_less_than64(char* op, int offset, int len)
         {
             DCHECK_LE(len, 64);
             DCHECK_GE(len, 4);
@@ -649,7 +648,7 @@ namespace ncore
             return op;
         }
 
-        static inline char *emit_copy(char *op, int offset, int len)
+        static inline char* emit_copy(char* op, int offset, int len)
         {
             /*
              * Emit 64 byte copies but make sure to keep at least four bytes
@@ -684,10 +683,10 @@ namespace ncore
          *
          * Returns true when successfull, otherwise false.
          */
-        bool uncompressed_length(const char *start, size_t n, size_t *result)
+        bool uncompressed_length(const char* start, size_t n, size_t* result)
         {
             u32         v     = 0;
-            const char *limit = start + n;
+            const char* limit = start + n;
             if (varint_parse32_with_limit(start, limit, &v) != NULL)
             {
                 *result = v;
@@ -705,7 +704,7 @@ namespace ncore
          * compression, and if the input is short, we won't need that
          * many hash table entries anyway.
          */
-        static u16 *get_hash_table(env_t *env, size_t input_size, int *table_size)
+        static u16* get_hash_table(env_t* env, size_t input_size, int* table_size)
         {
             unsigned htsize = 256;
 
@@ -715,7 +714,7 @@ namespace ncore
             CHECK_EQ(0, htsize & (htsize - 1));
             CHECK_LE(htsize, kmax_hash_table_size);
 
-            u16 *table;
+            u16* table;
             table = env->hash_table;
 
             *table_size = htsize;
@@ -737,7 +736,7 @@ namespace ncore
  * x86_64 is little endian.
  */
 #if defined(__LITTLE_ENDIAN__) && BITS_PER_LONG == 64
-        static inline int find_match_length(const char *s1, const char *s2, const char *s2_limit)
+        static inline int find_match_length(const char* s1, const char* s2, const char* s2_limit)
         {
             int matched = 0;
 
@@ -786,7 +785,7 @@ namespace ncore
             return matched;
         }
 #else
-        static inline int find_match_length(const char *s1, const char *s2, const char *s2_limit)
+        static inline int find_match_length(const char* s1, const char* s2, const char* s2_limit)
         {
             /* Implementation based on the x86-64 version, above. */
             DCHECK_GE(s2_limit, s2);
@@ -834,7 +833,7 @@ namespace ncore
 
         typedef u64 eight_bytes_reference;
 
-        static inline eight_bytes_reference get_eight_bytes_at(const char *ptr) { return unaligned_load64(ptr); }
+        static inline eight_bytes_reference get_eight_bytes_at(const char* ptr) { return unaligned_load64(ptr); }
 
         static inline u32 get_u32_at_offset(u64 v, int offset)
         {
@@ -845,11 +844,11 @@ namespace ncore
 
 #else
 
-        typedef const char *eight_bytes_reference;
+        typedef const char* eight_bytes_reference;
 
-        static inline eight_bytes_reference get_eight_bytes_at(const char *ptr) { return ptr; }
+        static inline eight_bytes_reference get_eight_bytes_at(const char* ptr) { return ptr; }
 
-        static inline u32 get_u32_at_offset(const char *v, int offset)
+        static inline u32 get_u32_at_offset(const char* v, int offset)
         {
             DCHECK_GE(offset, 0);
             DCHECK_LE(offset, 4);
@@ -871,26 +870,26 @@ namespace ncore
          * "end - op" is the compressed size of "input".
          */
 
-        static char *compress_fragment(const char *const input, const size_t input_size, char *op, u16 *table, const unsigned table_size)
+        static char* compress_fragment(const char* const input, const size_t input_size, char* op, u16* table, const unsigned table_size)
         {
             /* "ip" is the input pointer, and "op" is the output pointer. */
-            const char *ip = input;
+            const char* ip = input;
             CHECK_LE(input_size, kblock_size);
             CHECK_EQ(table_size & (table_size - 1), 0);
             const int shift = 32 - log2_floor(table_size);
             DCHECK_EQ(UINT_MAX >> shift, table_size - 1);
-            const char *ip_end = input + input_size;
-            const char *baseip = ip;
+            const char* ip_end = input + input_size;
+            const char* baseip = ip;
             /*
              * Bytes in [next_emit, ip) will be emitted as literal bytes.  Or
              *  [next_emit, ip_end) after the main loop.
              */
-            const char    *next_emit           = ip;
+            const char*    next_emit           = ip;
             const unsigned kinput_margin_bytes = 15;
 
             if (likely(input_size >= kinput_margin_bytes))
             {
-                const char *const ip_limit = input + input_size - kinput_margin_bytes;
+                const char* const ip_limit = input + input_size - kinput_margin_bytes;
 
                 u32 next_hash;
                 for (next_hash = hash(++ip, shift);;)
@@ -925,8 +924,8 @@ namespace ncore
                      */
                     u32 skip_bytes = 32;
 
-                    const char *next_ip = ip;
-                    const char *candidate;
+                    const char* next_ip = ip;
+                    const char* candidate;
                     do
                     {
                         ip       = next_ip;
@@ -973,7 +972,7 @@ namespace ncore
                          * We have a 4-byte match at ip, and no need to emit any
                          *  "literal bytes" prior to ip.
                          */
-                        const char *base    = ip;
+                        const char* base    = ip;
                         int         matched = 4 + find_match_length(candidate + 4, ip + 4, ip_end);
                         ip += matched;
                         int offset = base - candidate;
@@ -983,7 +982,7 @@ namespace ncore
                          * We could immediately start working at ip now, but to improve
                          * compression we first update table[Hash(ip - 1, ...)].
                          */
-                        const char *insert_tail = ip - 1;
+                        const char* insert_tail = ip - 1;
                         next_emit               = ip;
                         if (unlikely(ip >= ip_limit))
                         {
@@ -1045,15 +1044,15 @@ namespace ncore
 
         struct decompressor_t
         {
-            source_t   *reader;     /* Underlying source of bytes to decompress */
-            const char *ip;         /* Points to next buffered byte */
-            const char *ip_limit;   /* Points just past buffered bytes */
+            source_t*   reader;     /* Underlying source of bytes to decompress */
+            const char* ip;         /* Points to next buffered byte */
+            const char* ip_limit;   /* Points just past buffered bytes */
             u32         peeked;     /* Bytes peeked from reader (need to skip) */
             bool        eof;        /* Hit end of input without an error? */
             char        scratch[5]; /* Temporary buffer for peekfast boundaries */
         };
 
-        static void init_decompressor(decompressor_t *d, source_t *reader)
+        static void init_decompressor(decompressor_t* d, source_t* reader)
         {
             d->reader   = reader;
             d->ip       = NULL;
@@ -1062,14 +1061,14 @@ namespace ncore
             d->eof      = false;
         }
 
-        static void exit_decompressor(decompressor_t *d) { skip(d->reader, d->peeked); }
+        static void exit_decompressor(decompressor_t* d) { skip(d->reader, d->peeked); }
 
         /*
          * Read the uncompressed length stored at the start of the compressed data.
          * On succcess, stores the length in *result and returns true.
          * On failure, returns false.
          */
-        static bool read_uncompressed_length(decompressor_t *d, u32 *result)
+        static bool read_uncompressed_length(decompressor_t* d, u32* result)
         {
             DCHECK(d->ip == NULL); /*
                                     * Must not have read anything yet
@@ -1082,10 +1081,10 @@ namespace ncore
                 if (shift >= 32)
                     return false;
                 size_t      n;
-                const char *ip = peek(d->reader, &n);
+                const char* ip = peek(d->reader, &n);
                 if (n == 0)
                     return false;
-                const unsigned char c = *(const unsigned char *)(ip);
+                const unsigned char c = *(const unsigned char*)(ip);
                 skip(d->reader, 1);
                 *result |= (u32)(c & 0x7f) << shift;
                 if (c < 128)
@@ -1097,15 +1096,15 @@ namespace ncore
             return true;
         }
 
-        static bool refill_tag(decompressor_t *d);
+        static bool refill_tag(decompressor_t* d);
 
         /*
          * Process the next item found in the input.
          * Returns true if successful, false on error or end of input.
          */
-        static void decompress_all_tags(decompressor_t *d, writer_t *writer_t)
+        static void decompress_all_tags(decompressor_t* d, writer_t* writer_t)
         {
-            const char *ip = d->ip;
+            const char* ip = d->ip;
 
             /*
              * We could have put this refill fragment only at the beginning of the loop.
@@ -1125,7 +1124,7 @@ namespace ncore
             MAYBE_REFILL();
             for (;;)
             {
-                const unsigned char c = *(const unsigned char *)(ip++);
+                const unsigned char c = *(const unsigned char*)(ip++);
 
                 if ((c & 0x3) == LITERAL)
                 {
@@ -1188,9 +1187,9 @@ namespace ncore
 
 #undef MAYBE_REFILL
 
-        static bool refill_tag(decompressor_t *d)
+        static bool refill_tag(decompressor_t* d)
         {
-            const char *ip = d->ip;
+            const char* ip = d->ip;
 
             if (ip == d->ip_limit)
             {
@@ -1209,7 +1208,7 @@ namespace ncore
 
             /* Read the tag character */
             DCHECK_LT(ip, d->ip_limit);
-            const unsigned char c      = *(const unsigned char *)(ip);
+            const unsigned char c      = *(const unsigned char*)(ip);
             const u32           entry  = char_table[c];
             const u32           needed = (entry >> 11) + 1; /* +1 byte for 'c' */
             DCHECK_LE(needed, sizeof(d->scratch));
@@ -1231,7 +1230,7 @@ namespace ncore
                 while (nbuf < needed)
                 {
                     size_t      length;
-                    const char *src = peek(d->reader, &length);
+                    const char* src = peek(d->reader, &length);
                     if (length == 0)
                         return false;
                     u32 to_add = math::g_min(needed - nbuf, (u32)length);
@@ -1263,7 +1262,7 @@ namespace ncore
             return true;
         }
 
-        static int internal_uncompress(source_t *r, writer_t *writer_t, u32 max_len)
+        static int internal_uncompress(source_t* r, writer_t* writer_t, u32 max_len)
         {
             decompressor_t decompressor;
             u32            uncompressed_len = 0;
@@ -1287,13 +1286,13 @@ namespace ncore
             return -1;
         }
 
-        static inline int compress(env_t *env, source_t *reader, sink_t *writer_t)
+        static inline int compress(env_t* env, source_t* reader, sink_t* writer_t)
         {
             int    err;
             size_t written = 0;
             int    N       = available(reader);
             char   ulength[kmax32];
-            char  *p = varint_encode32(ulength, N);
+            char*  p = varint_encode32(ulength, N);
 
             append(writer_t, ulength, p - ulength);
             written += (p - ulength);
@@ -1302,7 +1301,7 @@ namespace ncore
             {
                 /* Get next block to compress (without copying if possible) */
                 size_t      fragment_size;
-                const char *fragment = peek(reader, &fragment_size);
+                const char* fragment = peek(reader, &fragment_size);
                 if (fragment_size == 0)
                 {
                     err = -1;
@@ -1327,12 +1326,12 @@ namespace ncore
                     {
                         fragment = peek(reader, &fragment_size);
                         size_t n = math::g_min(fragment_size, num_to_read - bytes_read);
-                        nmem::memcpy((char *)(env->scratch) + bytes_read, fragment, n);
+                        nmem::memcpy((char*)(env->scratch) + bytes_read, fragment, n);
                         bytes_read += n;
                         skip(reader, n);
                     }
                     DCHECK_EQ(bytes_read, num_to_read);
-                    fragment      = (const char *)env->scratch;
+                    fragment      = (const char*)env->scratch;
                     fragment_size = num_to_read;
                 }
                 if (fragment_size < num_to_read)
@@ -1340,10 +1339,10 @@ namespace ncore
 
                 /* Get encoding table for compression */
                 int  table_size;
-                u16 *table = get_hash_table(env, num_to_read, &table_size);
+                u16* table = get_hash_table(env, num_to_read, &table_size);
 
                 /* Compress input_fragment and append to dest */
-                char *dest = (char *)sink_peek(writer_t, max_compressed_length(num_to_read));
+                char* dest = (char*)sink_peek(writer_t, max_compressed_length(num_to_read));
                 if (!dest)
                 {
                     /*
@@ -1351,9 +1350,9 @@ namespace ncore
                      * because the byte sink_t doesn't have enough
                      * in one piece.
                      */
-                    dest = (char *)env->scratch_output;
+                    dest = (char*)env->scratch_output;
                 }
-                char *end = compress_fragment(fragment, fragment_size, dest, table, table_size);
+                char* end = compress_fragment(fragment, fragment_size, dest, table, table_size);
                 append(writer_t, dest, end - dest);
                 written += (end - dest);
 
@@ -1367,8 +1366,7 @@ namespace ncore
         }
 
 #ifdef SG
-
-        int compress_iov(env_t *env, iovec *iov_in, int iov_in_len, size_t input_length, iovec *iov_out, int *iov_out_len, size_t *compressed_length)
+        int compress_iov(env_t* env, iovec_t* iov_in, int iov_in_len, size_t input_length, iovec_t* iov_out, int* iov_out_len, size_t* compressed_length)
         {
             source_t reader   = {.iov = iov_in, .iovlen = iov_in_len, .total = input_length};
             sink_t   writer_t = {.iov = iov_out, .iovlen = *iov_out_len};
@@ -1398,15 +1396,15 @@ namespace ncore
          * The environment does not keep state over individual calls
          * of this function, just preallocates the memory.
          */
-        int compress(env_t *env, const char *input, size_t input_length, char *compressed, size_t *compressed_length)
+        int compress(env_t* env, const char* input, size_t input_length, char* compressed, size_t* compressed_length)
         {
-            iovec iov_in  = {.iov_base = (char *)input, .iov_len = input_length};
-            iovec iov_out = {.iov_base = compressed, .iov_len = 0xffffffff};
-            int   out     = 1;
+            iovec_t iov_in  = {.iov_base = (char*)input, .iov_len = input_length};
+            iovec_t iov_out = {.iov_base = compressed, .iov_len = 0xffffffff};
+            int     out     = 1;
             return snappy_compress_iov(env, &iov_in, 1, input_length, &iov_out, &out, compressed_length);
         }
 
-        int uncompress_iov(iovec *iov_in, int iov_in_len, size_t input_len, char *uncompressed)
+        int uncompress_iov(iovec_t* iov_in, int iov_in_len, size_t input_len, char* uncompressed)
         {
             source_t reader = {.iov = iov_in, .iovlen = iov_in_len, .total = input_len};
             writer_t output = {.base = uncompressed, .op = uncompressed};
@@ -1424,9 +1422,9 @@ namespace ncore
          *
          * Return 0 on success, otherwise an negative error code.
          */
-        int uncompress(const char *compressed, size_t n, char *uncompressed)
+        int uncompress(const char* compressed, size_t n, char* uncompressed)
         {
-            iovec iov = {.iov_base = (char *)compressed, .iov_len = n};
+            iovec_t iov = {.iov_base = (char*)compressed, .iov_len = n};
             return snappy_uncompress_iov(&iov, 1, n, uncompressed);
         }
 
@@ -1448,7 +1446,7 @@ namespace ncore
         // The environment does not keep state over individual calls
         // of this function, just preallocates the memory.
         //
-        int compress(env_t *env, const char *input, size_t input_length, char *compressed, size_t *compressed_length)
+        int compress(env_t* env, const char* input, size_t input_length, char* compressed, size_t* compressed_length)
         {
             source_t reader   = {.ptr = input, .left = input_length};
             sink_t   writer_t = {.dest = compressed};
@@ -1470,7 +1468,7 @@ namespace ncore
         //
         // Return 0 on success, otherwise an negative error code.
         //
-        int uncompress(const char *compressed, size_t n, char *uncompressed)
+        int uncompress(const char* compressed, size_t n, char* uncompressed)
         {
             source_t reader = {.ptr = compressed, .left = n};
             writer_t output = {.base = uncompressed, .op = uncompressed};
@@ -1479,7 +1477,7 @@ namespace ncore
 
 #endif
 
-        static inline void clear_env(env_t *env) { nmem::memset(env, 0, sizeof(*env)); }
+        static inline void clear_env(env_t* env) { nmem::memset(env, 0, sizeof(*env)); }
 
 #ifdef SG
         /**
@@ -1487,12 +1485,12 @@ namespace ncore
          * @env: Environment to preallocate
          * @sg: Input environment ever does scather gather
          *
-         * If false is passed to sg then multiple entries in an iovec
+         * If false is passed to sg then multiple entries in an iovec_t
          * are not legal.
          * Returns 0 on success, otherwise negative errno.
          * Must run in process context.
          */
-        int init_env_sg(env_t *env, bool sg)
+        int init_env_sg(env_t* env, bool sg)
         {
             if (init_env(env) < 0)
                 goto error;
@@ -1518,12 +1516,12 @@ namespace ncore
         // init_env - Allocate snappy compression environment
         // @env: Environment to preallocate
         //
-        // Passing multiple entries in an iovec is not allowed
+        // Passing multiple entries in an iovec_t is not allowed
         // on the environment allocated here.
         // Returns 0 on success, otherwise negative errno.
         // Must run in process context.
         //
-        int init_env(env_t *env)
+        int init_env(env_t* env)
         {
             clear_env(env);
             env->hash_table = vmalloc(sizeof(u16) * kmax_hash_table_size);
@@ -1536,7 +1534,7 @@ namespace ncore
         // @env: Environment to free.
         //
         // Must run in process context.
-        void free_env(env_t *env)
+        void free_env(env_t* env)
         {
             vfree(env->hash_table);
 #ifdef SG
