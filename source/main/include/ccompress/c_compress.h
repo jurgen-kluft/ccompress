@@ -7,35 +7,19 @@
 
 namespace ncore
 {
-    class alloc_t;
-
-    namespace ncompress
+    namespace nsnappy
     {
-        enum etype
-        {
-            type_none = 0,
-            type_lz4,
-            type_snappy,
-            type_max
-        };
-
-        struct compressor_t;
-        compressor_t* create_compressor(alloc_t *alloc, etype type, u32 threads, u32 level, u32 inputsize);
-        void free(compressor_t *ctx);
-        void reset(compressor_t *ctx);
-        void compress(compressor_t *ctx, u8 const *src, u8 const *src_end, u8 *dst, u8 *&dst_end, u8 *dst_eos);
-        int_t stats_get_frames(compressor_t * ctx);
-        int_t stats_get_insize(compressor_t * ctx);
-        int_t stats_get_outsize(compressor_t * ctx);
-
-        struct decompressor_t;
-        decompressor_t* create_decompressor(alloc_t *alloc, etype type, u32 threads, u32 level, u32 inputsize);
-        void free(decompressor_t *ctx);
-        void reset(decompressor_t *ctx);
-        void decompress(decompressor_t *ctx, u8 const *src, u8 const *src_end, u8 *dst, u8 *&dst_end, u8 *dst_eos);
-        int_t stats_get_frames(decompressor_t * ctx);
-        int_t stats_get_insize(decompressor_t * ctx);
-        int_t stats_get_outsize(decompressor_t * ctx);
+        // Compresses data using an externally-provided hash table workspace.
+        //
+        // @param src               Pointer to the input data.
+        // @param src_len           Length of the input data.
+        // @param dst               Pointer to the output destination buffer.
+        // @param hash_table        Pointer to an external workspace array of i32.
+        // @param hash_table_size   The number of elements in hash_table. MUST be a power of 2 (e.g., 512, 1024, 2048, 4096).
+        // @return                  Total number of compressed bytes written to dst.
+        //
+        uint_t snappy_compress(const u8* src, uint_t src_len, u8* dst, i32* hash_table, uint_t hash_table_size);
+        uint_t snappy_decompress(const u8* src, uint_t src_len, u8* dst, uint_t max_dst_len);
     }
 }
 
