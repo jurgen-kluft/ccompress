@@ -1,8 +1,13 @@
 # ccompress
 
-cross platform compression library
+Cross platform compression library
 
-There is currently only 1 candidate:
+## Implementations
 
-* LZ4 (www.lz4.org)
+There are currently 2 (untested) implementations:
+
+- [x] LZ4
+- [x] Snappy
+
+
 

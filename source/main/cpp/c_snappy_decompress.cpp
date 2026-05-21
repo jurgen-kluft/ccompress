@@ -27,7 +27,7 @@ namespace ncore
         }
 
         // Global Core Decoder Function
-        uint_t snappy_decompress(const u8* src, uint_t src_len, u8* dst, uint_t max_dst_len)
+        int_t decompress(const u8* src, uint_t src_len, u8* dst, uint_t max_dst_len)
         {
             if (src_len == 0)
                 return 0;

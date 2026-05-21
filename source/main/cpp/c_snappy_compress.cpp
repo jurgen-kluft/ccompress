@@ -61,7 +61,7 @@ namespace ncore
             return written;
         }
 
-        uint_t snappy_compress(const u8* src, uint_t src_len, u8* dst, i32* hash_table, uint_t hash_table_size)
+        uint_t compress(const u8* src, uint_t src_len, u8* dst, i32* hash_table, uint_t hash_table_size)
         {
             if (src_len == 0)
             {
