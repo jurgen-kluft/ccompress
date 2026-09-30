@@ -34,6 +34,9 @@ UNITTEST_SUITE_BEGIN(lz4)
             // std::cout << "Original Size:       " << len << " bytes\n";
             // std::cout << "LZ4 Fast (Level 1):  " << fast_size << " bytes\n";
             // std::cout << "LZ4 HC   (Level 12): " << hc_size << " bytes\n";
+
+            CHECK_TRUE_T(fast_size > 0, "Fast Compression Failed");
+            CHECK_TRUE_T(hc_size > 0, "HC Compression Failed");
         }
 
         UNITTEST_TEST(test_roundtrip)

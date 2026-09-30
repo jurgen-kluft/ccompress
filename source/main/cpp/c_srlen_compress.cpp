@@ -120,7 +120,7 @@ namespace ncore
                 }
             }
 
-            bool has_more(i32 count) const
+            bool has_more(u32 count) const
             {
                 // Check if there are at least 'count' bits available to read
                 return (m_byte_idx * 8 + m_bits_buffered) >= count;
@@ -345,7 +345,6 @@ namespace ncore
             writer.init(dst);
 
             const uint_t total_symbols        = (src_len * 8) / symbol_bits;
-            const uint_t total_unique_symbols = 1ULL << symbol_bits;
             uint_t       decoded_symbols      = 0;
 
             // Step 3: Decode and reconstruct arbitrary bits stream sequence payload blocks
